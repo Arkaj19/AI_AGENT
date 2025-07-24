@@ -360,6 +360,8 @@ class FeedProcessor:
 feed_processors = {}
 for feed_id, config in CCTV_FEEDS.items():
     feed_processors[feed_id] = FeedProcessor(feed_id, config)
+
+    
 # ------------------------- API ROUTES ---------------------------
 @app.get("/api/health")
 async def health_check():
@@ -368,6 +370,7 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "active_feeds": len([f for f in feed_processors.values() if f.running])
     }
+
 @app.get("/api/feeds")
 async def get_all_feeds():
     return {
@@ -375,6 +378,7 @@ async def get_all_feeds():
         "total_count": sum(feed.get("current_count", 0) for feed in feeds_data.values()),
         "timestamp": datetime.now().isoformat()
     }
+
 @app.get("/api/feeds/{feed_id}")
 async def get_feed_details(feed_id: str):
     if feed_id not in feeds_data:
@@ -384,6 +388,7 @@ async def get_feed_details(feed_id: str):
         "recent_analytics": list(analytics_data[feed_id])[-10:],
         "timestamp": datetime.now().isoformat()
     }
+
 # Add these endpoints to your FastAPI app
 @app.get("/api/video/stream/{feed_id}")
 async def get_video_stream(feed_id: str):
@@ -450,6 +455,7 @@ async def get_video_stream(feed_id: str):
             "Expires": "0",
         }
     )
+
 @app.get("/api/video/snapshot/{feed_id}")
 async def get_video_snapshot(feed_id: str):
     """Get current frame/snapshot from a feed"""
@@ -475,6 +481,7 @@ async def get_video_snapshot(feed_id: str):
         
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Snapshot error: {str(e)}"})
+    
 @app.get("/api/video/info")
 async def get_video_info():
     """Get information about all video feeds"""
@@ -512,6 +519,7 @@ async def get_video_info():
             }
     
     return {"video_info": video_info}
+
 @app.get("/api/analytics/summary")
 async def get_analytics_summary():
     total_current = sum(feed.get("current_count", 0) for feed in feeds_data.values())
@@ -540,6 +548,7 @@ async def get_analytics_summary():
         "trend_data": trend_data,
         "timestamp": datetime.now().isoformat()
     }
+
 @app.get("/api/alerts")
 async def get_current_alerts():
     alerts = [
@@ -556,6 +565,7 @@ async def get_current_alerts():
         for fid, data in feeds_data.items() if data.get("alert_level") in ["warning", "critical"]
     ]
     return {"alerts": alerts, "count": len(alerts), "timestamp": datetime.now().isoformat()}
+
 @app.get("/api/heatmap")
 async def get_heatmap_data():
     heatmap_data = [
@@ -570,6 +580,7 @@ async def get_heatmap_data():
         for data in feeds_data.values()
     ]
     return {"heatmap": heatmap_data, "timestamp": datetime.now().isoformat()}
+
 @app.get("/api/predictions")
 async def get_crowd_predictions():
     predictions = {}
@@ -589,6 +600,7 @@ async def get_crowd_predictions():
                 "risk_level": risk
             }
     return {"predictions": predictions, "timestamp": datetime.now().isoformat()}
+
 @app.get("/api/export/csv")
 async def export_data_csv():
     try:
@@ -609,6 +621,7 @@ async def export_data_csv():
         })
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
 @app.post("/api/controls/start")
 async def start_monitoring():
     try:
@@ -618,6 +631,7 @@ async def start_monitoring():
         return {"message": "Monitoring started", "timestamp": datetime.now().isoformat()}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
 @app.post("/api/controls/stop")
 async def stop_monitoring():
     try:
@@ -626,12 +640,14 @@ async def stop_monitoring():
         return {"message": "Monitoring stopped", "timestamp": datetime.now().isoformat()}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+    
 @app.get("/api/config/thresholds")
 async def get_thresholds():
     return {
         "alert_threshold": alert_threshold,
         "congestion_threshold": congestion_threshold
     }
+
 @app.post("/api/config/thresholds")
 async def update_thresholds(body: Dict[str, int] = Body(...)):
     global alert_threshold, congestion_threshold
